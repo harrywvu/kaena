@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Kaena",
+    "slug": "kaena",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Kaena uses your location to recommend nearby restaurants."
+        }
+      ]
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0A07"
+      }
+    }
+  }
+}
