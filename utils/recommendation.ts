@@ -1,7 +1,12 @@
 import { chooseBestRestaurantWithHf } from "../services/hfService";
 import { fetchNearbyRestaurants } from "../services/placesService";
 import { LoadingFailure, Preferences, RankedRestaurant } from "../types";
+import { getRecentPicks } from "./recentPicks";
 import { preRankRestaurants } from "./ranking";
+
+function normalizeName(name: string) {
+  return name.trim().toLocaleLowerCase();
+}
 
 export async function buildRecommendation(
   lat: number,
@@ -22,18 +27,24 @@ export async function buildRecommendation(
     throw error;
   }
 
-  const llmIndex = await chooseBestRestaurantWithHf(preferences, candidates);
+  const recentPicks = await getRecentPicks();
+  const filteredCandidates = candidates.filter(
+    (candidate) => !recentPicks.some((recentPick) => normalizeName(recentPick) === normalizeName(candidate.name))
+  );
+  const selectableCandidates = filteredCandidates.length > 0 ? filteredCandidates : candidates;
+
+  const llmIndex = await chooseBestRestaurantWithHf(preferences, selectableCandidates, recentPicks);
   if (llmIndex == null) {
     return {
-      result: candidates[0],
-      candidates,
+      result: selectableCandidates[0],
+      candidates: selectableCandidates,
       llmUsed: false,
     };
   }
 
   return {
-    result: candidates[llmIndex],
-    candidates,
+    result: selectableCandidates[llmIndex],
+    candidates: selectableCandidates,
     llmUsed: true,
   };
 }

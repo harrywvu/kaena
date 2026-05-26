@@ -11,30 +11,32 @@ type Props = {
 export function MapPreview({ userLocation, destination }: Props) {
   try {
     return (
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: (userLocation.lat + destination.lat) / 2,
-          longitude: (userLocation.lng + destination.lng) / 2,
-          latitudeDelta: Math.max(Math.abs(userLocation.lat - destination.lat) * 1.8, 0.02),
-          longitudeDelta: Math.max(Math.abs(userLocation.lng - destination.lng) * 1.8, 0.02),
-        }}
-      >
-        <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }} title="You" />
-        <Marker
-          coordinate={{ latitude: destination.lat, longitude: destination.lng }}
-          title={destination.name}
-          pinColor={palette.accent}
-        />
-        <Polyline
-          coordinates={[
-            { latitude: userLocation.lat, longitude: userLocation.lng },
-            { latitude: destination.lat, longitude: destination.lng },
-          ]}
-          strokeColor={palette.accent}
-          strokeWidth={3}
-        />
-      </MapView>
+      <View style={styles.shell}>
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: (userLocation.lat + destination.lat) / 2,
+            longitude: (userLocation.lng + destination.lng) / 2,
+            latitudeDelta: Math.max(Math.abs(userLocation.lat - destination.lat) * 1.8, 0.02),
+            longitudeDelta: Math.max(Math.abs(userLocation.lng - destination.lng) * 1.8, 0.02),
+          }}
+        >
+          <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }} title="You" />
+          <Marker
+            coordinate={{ latitude: destination.lat, longitude: destination.lng }}
+            title={destination.name}
+            pinColor={palette.accent}
+          />
+          <Polyline
+            coordinates={[
+              { latitude: userLocation.lat, longitude: userLocation.lng },
+              { latitude: destination.lat, longitude: destination.lng },
+            ]}
+            strokeColor={palette.accent}
+            strokeWidth={3}
+          />
+        </MapView>
+      </View>
     );
   } catch {
     return (
@@ -49,10 +51,14 @@ export function MapPreview({ userLocation, destination }: Props) {
 }
 
 const styles = StyleSheet.create({
-  map: {
-    height: 220,
+  shell: {
     borderRadius: 24,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  map: {
+    height: 220,
   },
   fallback: {
     minHeight: 220,

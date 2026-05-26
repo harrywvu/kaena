@@ -47,7 +47,13 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer theme={navTheme}>
         <StatusBar style="light" />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: "fade",
+            animationDuration: 280,
+          }}
+        >
           <Stack.Screen name="KaenaFlow" component={KaenaFlowScreen} />
         </Stack.Navigator>
       </NavigationContainer>

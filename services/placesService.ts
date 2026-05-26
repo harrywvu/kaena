@@ -104,6 +104,14 @@ async function reverseGeocode(lat: number, lng: number) {
   };
 }
 
+export async function resolveUserArea(lat: number, lng: number) {
+  if (!GOOGLE_PLACES_API_KEY) {
+    throw new Error("Missing GOOGLE_PLACES_API_KEY");
+  }
+
+  return reverseGeocode(lat, lng);
+}
+
 async function runTextSearch(query: string, lat: number, lng: number) {
   const params = {
     key: GOOGLE_PLACES_API_KEY,
@@ -140,8 +148,7 @@ async function runTextSearch(query: string, lat: number, lng: number) {
 
   const rawResults = response.data.results ?? [];
   const afterBusinessStatus = rawResults.filter((item) => item.business_status !== "CLOSED_TEMPORARILY");
-  const finalCandidates = afterBusinessStatus
-    .map((item) => {
+  const mappedCandidates = afterBusinessStatus.map((item): Restaurant | null => {
       const candidateLat = item.geometry?.location?.lat;
       const candidateLng = item.geometry?.location?.lng;
 
@@ -161,8 +168,10 @@ async function runTextSearch(query: string, lat: number, lng: number) {
         distanceFromUser: haversineKm(lat, lng, candidateLat, candidateLng),
         raw: item,
       } satisfies Restaurant;
-    })
-    .filter((item): item is Restaurant => Boolean(item))
+    });
+
+  const finalCandidates = mappedCandidates
+    .filter((item): item is Restaurant => item !== null)
     .sort((a, b) => (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity))
     .slice(0, MAX_RESULTS);
 
@@ -184,30 +193,53 @@ async function runTextSearch(query: string, lat: number, lng: number) {
   return finalCandidates;
 }
 
+function dedupeCandidates(candidates: Restaurant[]) {
+  const byId = new Map<string, Restaurant>();
+
+  for (const candidate of candidates) {
+    if (!byId.has(candidate.id)) {
+      byId.set(candidate.id, candidate);
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
+async function runAreaSearches(area: string, lat: number, lng: number) {
+  const queries = [
+    `restaurant in ${area}`,
+    `cafe in ${area}`,
+    `bakery in ${area}`,
+    `food in ${area}`,
+  ];
+
+  const results = await Promise.all(queries.map((query) => runTextSearch(query, lat, lng)));
+  return dedupeCandidates(results.flat()).slice(0, MAX_RESULTS);
+}
+
 export async function fetchNearbyRestaurants(lat: number, lng: number): Promise<Restaurant[]> {
   if (!GOOGLE_PLACES_API_KEY) {
     throw new Error("Missing GOOGLE_PLACES_API_KEY");
   }
 
-  const area = await reverseGeocode(lat, lng);
-  const municipalityQuery = `restaurant in ${[area.municipality, area.province].filter(Boolean).join(", ")}`;
+  const area = await resolveUserArea(lat, lng);
+  const municipalityArea = [area.municipality, area.province].filter(Boolean).join(", ");
   console.log("[places] resolved search area", {
     municipality: area.municipality,
     province: area.province,
   });
 
-  const municipalResults = await runTextSearch(municipalityQuery, lat, lng);
+  const municipalResults = await runAreaSearches(municipalityArea, lat, lng);
   if (municipalResults.length > 0) {
     return municipalResults;
   }
 
   if (area.province) {
-    const provinceQuery = `restaurant in ${area.province}`;
     console.log("[places] municipality search empty, retrying broader area", {
       municipality: area.municipality,
       province: area.province,
     });
-    const provinceResults = await runTextSearch(provinceQuery, lat, lng);
+    const provinceResults = await runAreaSearches(area.province, lat, lng);
     if (provinceResults.length > 0) {
       return provinceResults;
     }

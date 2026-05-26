@@ -1,9 +1,15 @@
 export const palette = {
   background: "#0E0A07",
+  backgroundElevated: "#16100D",
   surface: "#1C1310",
+  surfaceMuted: "#261A15",
   accent: "#F0A030",
+  accentSoft: "rgba(240, 160, 48, 0.12)",
   textPrimary: "#F4ECDA",
+  textSecondary: "#D7CBB7",
   textMuted: "#87776E",
   border: "#2E221D",
+  separator: "rgba(244, 236, 218, 0.10)",
   success: "#A4D07C",
+  danger: "#C96B4B",
 };

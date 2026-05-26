@@ -73,9 +73,16 @@ export function generateExplanation(candidate: Restaurant, preferences: Preferen
 
   const finalReasons = reasons.slice(0, 3);
   if (finalReasons.length === 0) {
-    return "Selected as the strongest overall match for tonight.";
+    return appendBusyNote("Selected as the strongest overall match for tonight.", candidate);
   }
-  return `Selected due to ${finalReasons.join(", ")}.`;
+  return appendBusyNote(`Selected due to ${finalReasons.join(", ")}.`, candidate);
+}
+
+function appendBusyNote(message: string, candidate: Restaurant) {
+  if ((candidate.userRatingsTotal ?? 0) > 100) {
+    return `${message} Popular spot, may have a wait.`;
+  }
+  return message;
 }
 
 export function preRankRestaurants(restaurants: Restaurant[], preferences: Preferences): RankedRestaurant[] {
